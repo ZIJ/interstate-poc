@@ -1,76 +1,130 @@
 package handlers
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/zij/interstate/service"
 )
 
-// BackendHandler contains all methods for handling backend-related requests
+// BackendHandler handles HTTP requests related to backends
 type BackendHandler struct {
-	// You can add dependencies here, such as a service layer
-	// backendService *service.BackendService
+	service *service.BackendService
 }
 
 // NewBackendHandler creates a new BackendHandler
-func NewBackendHandler() *BackendHandler {
+func NewBackendHandler(service *service.BackendService) *BackendHandler {
 	return &BackendHandler{
-		// Initialize dependencies here
-		// backendService: service.NewBackendService(),
+		service: service,
 	}
 }
 
 // ListBackends handles GET /api/backends
 func (h *BackendHandler) ListBackends(c *gin.Context) {
-	log.Println("Implement me: ListBackends")
-	c.JSON(http.StatusOK, gin.H{"message": "List all backends"})
+	backends, err := h.service.ListBackends()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list backends"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"backends": backends})
 }
 
 // CreateBackend handles POST /api/backends
 func (h *BackendHandler) CreateBackend(c *gin.Context) {
-	log.Println("Implement me: CreateBackend")
-	c.JSON(http.StatusOK, gin.H{"message": "Create a new backend"})
+	var input struct {
+		Name string `json:"name" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err := h.service.CreateBackend(input.Name)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create backend"})
+		return
+	}
+	c.JSON(http.StatusCreated, gin.H{"message": "Backend created successfully"})
 }
 
 // GetBackend handles GET /api/backends/:backendId
 func (h *BackendHandler) GetBackend(c *gin.Context) {
 	backendID := c.Param("backendId")
-	log.Printf("Implement me: GetBackend with ID: %s", backendID)
-	c.JSON(http.StatusOK, gin.H{"message": "Get a specific backend"})
+	backend, err := h.service.GetBackend(backendID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Backend not found"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"backend": backend})
 }
 
 // UpdateBackend handles PUT /api/backends/:backendId
 func (h *BackendHandler) UpdateBackend(c *gin.Context) {
 	backendID := c.Param("backendId")
-	log.Printf("Implement me: UpdateBackend with ID: %s", backendID)
-	c.JSON(http.StatusOK, gin.H{"message": "Update an existing backend"})
+	var input struct {
+		Name string `json:"name" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err := h.service.UpdateBackend(backendID, input.Name)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update backend"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Backend updated successfully"})
 }
 
 // DeleteBackend handles DELETE /api/backends/:backendId
 func (h *BackendHandler) DeleteBackend(c *gin.Context) {
 	backendID := c.Param("backendId")
-	log.Printf("Implement me: DeleteBackend with ID: %s", backendID)
-	c.JSON(http.StatusOK, gin.H{"message": "Delete a specific backend"})
+	err := h.service.DeleteBackend(backendID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete backend"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Backend deleted successfully"})
 }
 
 // GetBackendState handles GET /api/backends/:backendId/state
 func (h *BackendHandler) GetBackendState(c *gin.Context) {
 	backendID := c.Param("backendId")
-	log.Printf("Implement me: GetBackendState with ID: %s", backendID)
-	c.JSON(http.StatusOK, gin.H{"message": "Get backend state"})
+	state, err := h.service.GetBackendState(backendID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Backend state not found"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"state": state})
 }
 
 // UpdateBackendState handles POST /api/backends/:backendId/state
 func (h *BackendHandler) UpdateBackendState(c *gin.Context) {
 	backendID := c.Param("backendId")
-	log.Printf("Implement me: UpdateBackendState with ID: %s", backendID)
-	c.JSON(http.StatusOK, gin.H{"message": "Update backend state"})
+	var input struct {
+		State string `json:"state" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err := h.service.UpdateBackendState(backendID, input.State)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update backend state"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Backend state updated successfully"})
 }
 
 // ResetBackendState handles DELETE /api/backends/:backendId/state
 func (h *BackendHandler) ResetBackendState(c *gin.Context) {
 	backendID := c.Param("backendId")
-	log.Printf("Implement me: ResetBackendState with ID: %s", backendID)
-	c.JSON(http.StatusOK, gin.H{"message": "Reset backend state"})
+	err := h.service.ResetBackendState(backendID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to reset backend state"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Backend state reset successfully"})
 }
