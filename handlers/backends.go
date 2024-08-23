@@ -93,10 +93,10 @@ func (h *BackendHandler) GetBackendState(c *gin.Context) {
 	backendID := c.Param("backendId")
 	state, err := h.service.GetBackendState(backendID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Backend state not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Failed to retrieve backend state"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"state": state})
+	c.JSON(http.StatusOK, state)
 }
 
 // UpdateBackendState handles POST /api/backends/:backendId/state

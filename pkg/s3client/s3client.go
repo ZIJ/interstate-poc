@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -129,4 +130,18 @@ func (s *S3Client) DeleteObject(key string) error {
 		return fmt.Errorf("failed to delete object from S3: %w", err)
 	}
 	return nil
+}
+
+// ReadFile reads the contents of a file from S3
+func (s *S3Client) ReadFile(key string) ([]byte, error) {
+	resp, err := s.client.GetObject(context.TODO(), &s3.GetObjectInput{
+		Bucket: aws.String(s.bucket),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get object from S3: %w", err)
+	}
+	defer resp.Body.Close()
+
+	return ioutil.ReadAll(resp.Body)
 }

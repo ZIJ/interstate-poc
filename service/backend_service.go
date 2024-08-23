@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 
@@ -54,9 +55,19 @@ func (s *BackendService) DeleteBackend(id string) error {
 }
 
 // GetBackendState retrieves the state of a specific backend
-func (s *BackendService) GetBackendState(id string) (string, error) {
-	// TODO: Implement getting backend state from S3
-	return fmt.Sprintf("Backend %s state", id), nil
+func (s *BackendService) GetBackendState(id string) (map[string]interface{}, error) {
+	key := fmt.Sprintf("%s/terraform.tfstate", id)
+	data, err := s.s3Client.ReadFile(key)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read backend state: %w", err)
+	}
+
+	var state map[string]interface{}
+	if err := json.Unmarshal(data, &state); err != nil {
+		return nil, fmt.Errorf("failed to parse backend state: %w", err)
+	}
+
+	return state, nil
 }
 
 // UpdateBackendState updates the state of a specific backend
