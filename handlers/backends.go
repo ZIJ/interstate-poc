@@ -102,15 +102,14 @@ func (h *BackendHandler) GetBackendState(c *gin.Context) {
 // UpdateBackendState handles POST /api/backends/:backendId/state
 func (h *BackendHandler) UpdateBackendState(c *gin.Context) {
 	backendID := c.Param("backendId")
-	var input struct {
-		State string `json:"state" binding:"required"`
-	}
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	
+	var state map[string]interface{}
+	if err := c.ShouldBindJSON(&state); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid state data"})
 		return
 	}
 
-	err := h.service.UpdateBackendState(backendID, input.State)
+	err := h.service.UpdateBackendState(backendID, state)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update backend state"})
 		return

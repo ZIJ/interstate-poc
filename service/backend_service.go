@@ -71,8 +71,17 @@ func (s *BackendService) GetBackendState(id string) (map[string]interface{}, err
 }
 
 // UpdateBackendState updates the state of a specific backend
-func (s *BackendService) UpdateBackendState(id string, newState string) error {
-	// TODO: Implement updating backend state in S3
+func (s *BackendService) UpdateBackendState(id string, state map[string]interface{}) error {
+	data, err := json.Marshal(state)
+	if err != nil {
+		return fmt.Errorf("failed to marshal backend state: %w", err)
+	}
+
+	key := fmt.Sprintf("%s/terraform.tfstate", id)
+	if err := s.s3Client.WriteFile(key, data); err != nil {
+		return fmt.Errorf("failed to write backend state: %w", err)
+	}
+
 	return nil
 }
 

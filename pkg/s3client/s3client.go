@@ -145,3 +145,16 @@ func (s *S3Client) ReadFile(key string) ([]byte, error) {
 
 	return ioutil.ReadAll(resp.Body)
 }
+
+// WriteFile writes the contents to a file in S3
+func (s *S3Client) WriteFile(key string, data []byte) error {
+	_, err := s.client.PutObject(context.TODO(), &s3.PutObjectInput{
+		Bucket: aws.String(s.bucket),
+		Key:    aws.String(key),
+		Body:   bytes.NewReader(data),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to write object to S3: %w", err)
+	}
+	return nil
+}
